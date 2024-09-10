@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-
 )
 
 func ReadFileTxt(filePath string) []string {
@@ -36,7 +35,7 @@ func CheckFileOrFolder(filePath string) bool {
 }
 
 func RandomNumber(min int, max int) int {
-	return rand.Intn(max) + min
+	return rand.Intn(max-min) + min
 }
 
 func FindKeyByValue(m map[string]interface{}, value interface{}) []string {

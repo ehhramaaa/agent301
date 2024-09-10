@@ -1,12 +1,32 @@
-FROM python:3.10.11-alpine3.18
+# Gunakan image Go berbasis Alpine
+FROM golang:latest AS builder
 
+# Set working directory
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
+# Salin file go mod dan sum
+COPY go.mod go.sum ./
 
-RUN pip3 install --upgrade pip setuptools wheel
-RUN pip3 install --no-warn-script-location --no-cache-dir -r requirements.txt
+# Download dependensi
+RUN go mod download
 
+# Salin kode sumber
 COPY . .
 
-CMD ["python3", "main.py", "-a", "1"]
+# Build aplikasi
+RUN go build -o main .
+
+# Gunakan image Alpine sebagai base untuk runtime
+FROM alpine:latest
+
+# Install dependensi runtime (jika ada)
+RUN apk --no-cache add ca-certificates
+
+# Set working directory
+WORKDIR /root/
+
+# Salin binary dari stage builder
+COPY --from=builder /app/main .
+
+# Jalankan aplikasi
+CMD ["./main"]

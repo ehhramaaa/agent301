@@ -3,5 +3,9 @@ bot:
   refer-url: https://telegram.agent301.org/
   ref-id: 0
 
+auto-spin: true
 query-file: "query.txt"
-thread: 10
+max-thread: 10
+random-sleep:
+  min: 1800
+  max: 3600

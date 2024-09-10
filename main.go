@@ -1,13 +1,30 @@
 package main
 
 import (
-	"agent301/core"
+	"fmt"
 
 	"github.com/gookit/config/v2"
 	"github.com/gookit/config/v2/yaml"
+
+	"agent301/core"
 )
 
 func main() {
+	fmt.Println(`
+ /$$$$$$$                                                           /$$$$$$                                  /$$      /$$$$$$   /$$$$$$    /$$  
+| $$__  $$                                                         /$$__  $$                                | $$     /$$__  $$ /$$$_  $$ /$$$$  
+| $$  \ $$  /$$$$$$  /$$$$$$$   /$$$$$$$  /$$$$$$   /$$$$$$$      | $$  \ $$  /$$$$$$   /$$$$$$  /$$$$$$$  /$$$$$$  |__/  \ $$| $$$$\ $$|_  $$  
+| $$$$$$$  |____  $$| $$__  $$ /$$_____/ /$$__  $$ /$$_____/      | $$$$$$$$ /$$__  $$ /$$__  $$| $$__  $$|_  $$_/     /$$$$$/| $$ $$ $$  | $$  
+| $$__  $$  /$$$$$$$| $$  \ $$|  $$$$$$ | $$  \ $$|  $$$$$$       | $$__  $$| $$  \ $$| $$$$$$$$| $$  \ $$  | $$      |___  $$| $$\ $$$$  | $$  
+| $$  \ $$ /$$__  $$| $$  | $$ \____  $$| $$  | $$ \____  $$      | $$  | $$| $$  | $$| $$_____/| $$  | $$  | $$ /$$ /$$  \ $$| $$ \ $$$  | $$  
+| $$$$$$$/|  $$$$$$$| $$  | $$ /$$$$$$$/|  $$$$$$/ /$$$$$$$/      | $$  | $$|  $$$$$$$|  $$$$$$$| $$  | $$  |  $$$$/|  $$$$$$/|  $$$$$$/ /$$$$$$
+|_______/  \_______/|__/  |__/|_______/  \______/ |_______/       |__/  |__/ \____  $$ \_______/|__/  |__/   \___/   \______/  \______/ |______/
+                                                                             /$$  \ $$                                                          
+                                                                            |  $$$$$$/                                                          
+                                                                             \______/                                                           
+`)
+	fmt.Println(`𝓹𝓸𝔀𝓮𝓻𝓮𝓭 𝓫𝔂 : 𝓱𝓸𝓵𝔂𝓬𝓪𝓷\n`)
+
 	// add driver for support yaml content
 	config.AddDriver(yaml.Driver)
 
@@ -16,11 +33,5 @@ func main() {
 		panic(err)
 	}
 
-	queryPath := config.String("query-file")
-	apiUrl := config.String("bot.api-url")
-	referUrl := config.String("bot.refer-url")
-	refId := config.String("bot.ref-Id")
-	thread := config.Int("thread")
-
-	core.ProcessAccount(thread, queryPath, apiUrl, referUrl, refId)
+	core.ProcessBot(config.Default())
 }

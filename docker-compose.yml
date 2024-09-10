@@ -1,8 +1,8 @@
 version: '3'
 services:
   bot:
-    container_name: 'Cats'
-    image: cats
+    container_name: 'Agent301'
+    image: agent301
     stop_signal: SIGINT
     restart: always
     deploy:

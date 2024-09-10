@@ -3,23 +3,10 @@ package core
 import (
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"agent301/helper"
-
 )
-
-// TODO Add Sleep
-func worker(jobs <-chan int, query []string, apiUrl string, referUrl string, refId string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	for j := range jobs {
-		username := getUsernameFromQuery(query[j])
-		helper.PrettyLog("info", fmt.Sprintf("User: %s Started Bot...", username))
-		processBot(username, query[j], apiUrl, referUrl, refId)
-	}
-}
 
 func processResponse(res map[string]interface{}) map[string]interface{} {
 	var result map[string]interface{}
@@ -36,7 +23,7 @@ func processResponse(res map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-func processBot(username string, query string, apiUrl string, referUrl string, refId string) {
+func launchBot(username string, query string, apiUrl string, referUrl string, refId string, isSpinWheel bool) {
 	client := &Client{
 		apiURL:     apiUrl,
 		referURL:   referUrl,
@@ -115,91 +102,100 @@ func processBot(username string, query string, apiUrl string, referUrl string, r
 	}
 
 	// Completing Daily And Wheel Task
-	if wheelTask, exits := wheel["tasks"].([]interface{}); exits {
-		for _, task := range wheelTask {
-			taskMap, ok := task.(map[string]interface{})
-			if !ok {
-				continue
-			}
-
+	if wheelTask, exits := wheel["tasks"].(map[string]interface{}); exits {
+		for key, task := range wheelTask {
 			// Completing Daily Task
-			if (taskMap["daily"].(int64) + 86400) < time.Now().Unix() {
-				req, err = client.dailyTask()
-				if err != nil {
-					helper.PrettyLog("error", fmt.Sprintf("Failed to completing daily task: %v", err))
-					return
+			if key == "daily" {
+				if (int64(task.(float64) + 86400)) < time.Now().Unix() {
+					req, err = client.dailyTask()
+					if err != nil {
+						helper.PrettyLog("error", fmt.Sprintf("Failed to completing daily task: %v", err))
+					}
+
+					res, err = handleResponse(req)
+					if err != nil {
+						fmt.Println("Error handling response:", err)
+					}
+
+					taskData := processResponse(res)
+
+					helper.PrettyLog("success", fmt.Sprintf("%s | Completed Daily Task | Current Ticket: %.0f", username, taskData["tickets"].(float64)))
 				}
-
-				res, err = handleResponse(req)
-				if err != nil {
-					fmt.Println("Error handling response:", err)
-					return
-				}
-
-				taskData := processResponse(res)
-
-				helper.PrettyLog("success", fmt.Sprintf("%s | Completed Daily Task | Current Ticket: %.0f", username, taskData["tickets"].(float64)))
 			}
 
-			taskNotCompleted := helper.FindKeyByValue(taskMap, false)
+			// Completing Video Task
+			if key == "hour" {
+				for key, value := range task.(map[string]interface{}) {
+					if key == "timestamp" && (float64(time.Now().Unix()) >= value.(float64)) {
+						var taskData map[string]interface{}
 
-			for _, task := range taskNotCompleted {
-				req, err = client.wheelTask(task)
+						for i := 1; i <= 5; i++ {
+							req, err = client.videoTask()
+							if err != nil {
+								helper.PrettyLog("error", fmt.Sprintf("Failed to completing video task: %v", err))
+								break
+							}
+
+							res, err = handleResponse(req)
+							if err != nil {
+								fmt.Println("Error handling response:", err)
+							}
+
+							taskData = processResponse(res)
+
+							helper.PrettyLog("success", fmt.Sprintf("%s | Completed Video Task | Sleep 15 Second...", username))
+
+							time.Sleep(15 * time.Second)
+						}
+
+						helper.PrettyLog("success", fmt.Sprintf("%s | Video Task Limit | Current Ticket: %.0f", username, taskData["tickets"].(float64)))
+					}
+				}
+			}
+
+			if key != "daily" && key != "hour" && !task.(bool) {
+				req, err = client.wheelTask(key)
 				if err != nil {
 					helper.PrettyLog("error", fmt.Sprintf("Failed to completing wheel task: %v", err))
-					return
 				}
 
 				res, err = handleResponse(req)
 				if err != nil {
 					fmt.Println("Error handling response:", err)
-					return
 				}
 
 				taskData := processResponse(res)
 
-				helper.PrettyLog("success", fmt.Sprintf("%s | Completed Wheel Task : %s | Current Ticket: %.0f", username, taskData[fmt.Sprintf("tasks.%v", task)].(string), taskData["tickets"].(float64)))
+				helper.PrettyLog("success", fmt.Sprintf("%s | Completed Wheel Task : %s | Current Ticket: %.0f", username, key, taskData["tickets"].(float64)))
 			}
 		}
+	} else {
+		helper.PrettyLog("error", fmt.Sprintf("%s | No tasks wheel found...", username))
 	}
 
-	// Completing Video Task
-	if videoTask, exits := wheel["tasks.hour"].([]interface{}); exits {
-		for _, task := range videoTask { 
-			var taskData map[string]interface{}
-			taskMap, ok := task.(map[string]interface{})
-			if !ok {
-				continue
+	if isSpinWheel {
+		isLimit := false
+
+		for !isLimit {
+			req, err = client.spinWheel()
+			if err != nil {
+				helper.PrettyLog("error", fmt.Sprintf("Failed to spin wheel: %v", err))
+				isLimit = true
+				break
 			}
-			
-			for taskMap["count"].(int) != 5 {
-				req, err = client.videoTask()
-				if err != nil {
-					helper.PrettyLog("error", fmt.Sprintf("Failed to completing video task: %v", err))
-					return
-				}
-		
-				res, err = handleResponse(req)
-				if err != nil {
-					fmt.Println("Error handling response:", err)
-					return
-				}
-		
-				taskData = processResponse(res)
-		
-				if taskData["hour.count"] == 5 {
-					break
-				}
-		
-				sleep := 15
-		
-				helper.PrettyLog("success", fmt.Sprintf("%s | Completed Video Task | Sleep: %v Second...", username, sleep))
-		
-				time.Sleep(time.Duration(sleep) * time.Second)
+
+			res, err = handleResponse(req)
+			if err != nil {
+				fmt.Println("Error handling response:", err)
 			}
-		
-			helper.PrettyLog("success", fmt.Sprintf("%s | Video Task Limit | Current Ticket: %.0f", username, taskData["tickets"].(float64)))
+
+			spinner := processResponse(res)
+
+			helper.PrettyLog("success", fmt.Sprintf("%s | Spinning Wheel | Reward: %s | Balance: %.0f | Toncoin: %.0f | Notcoin: %.0f | Ticket: %.0f", username, spinner["reward"].(string), spinner["balance"].(float64), spinner["toncoin"].(float64), spinner["notcoin"].(float64), spinner["tickets"].(float64)))
+
+			helper.PrettyLog("info", fmt.Sprintf("%s | Sleep 15 Second Before Spinning Wheel Again...", username))
+
+			time.Sleep(15 * time.Second)
 		}
-	
 	}
 }

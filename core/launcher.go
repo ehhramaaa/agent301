@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gookit/config/v2"
+
 	"agent301/helper"
 )
 
@@ -42,42 +44,60 @@ func getUsernameFromQuery(account string) string {
 	return userData["username"].(string)
 }
 
-func ProcessAccount(thread int, queryPath string, apiUrl string, referUrl string, refId string) {
+func ProcessBot(config *config.Config) {
+	queryPath := config.String("query-file")
+	apiUrl := config.String("bot.api-url")
+	referUrl := config.String("bot.refer-url")
+	refId := config.String("bot.ref-Id")
+	isSpinWheel := config.Bool("auto-spin")
+	maxThread := config.Int("max-thread")
+
 	queryData := readQueryData(queryPath)
 	if queryData == nil {
 		helper.PrettyLog("error", "Query data not found")
 		return
 	}
 
-	jobs := make(chan int)
+	helper.PrettyLog("info", fmt.Sprintf("%v Query Data Detected", len(queryData)))
+	helper.PrettyLog("info", "Start Processing Account...")
+
+	time.Sleep(3 * time.Second)
+
 	var wg sync.WaitGroup
 
-	if len(queryData) < thread {
-		thread = len(queryData)
-	}
+	// Membuat semaphore dengan buffered channel
+	semaphore := make(chan struct{}, maxThread)
 
-	// Memulai beberapa worker goroutine
-	for i := 1; i <= thread; i++ {
+	for j, query := range queryData {
 		wg.Add(1)
-		go worker(jobs, queryData, apiUrl, referUrl, refId, &wg)
+
+		// Goroutine untuk setiap job
+		go func(index int, query string) {
+			defer wg.Done()
+
+			// Mengambil token dari semaphore sebelum menjalankan job
+			semaphore <- struct{}{}
+
+			username := getUsernameFromQuery(query)
+			helper.PrettyLog("info", fmt.Sprintf("%s | Started Bot...", username))
+
+			// Jalankan bot
+			launchBot(username, query, apiUrl, referUrl, refId, isSpinWheel)
+
+			// Sleep setelah job selesai
+			randomSleep := helper.RandomNumber(config.Int("random-sleep.min"), config.Int("random-sleep.max"))
+
+			helper.PrettyLog("info", fmt.Sprintf("%s | Launch Bot Finished, Sleeping for %v seconds..", username, randomSleep))
+
+			time.Sleep(time.Duration(randomSleep) * time.Second)
+
+			// Melepaskan token dari semaphore
+			<-semaphore
+		}(j, query)
 	}
 
-	// Mengirim pekerjaan baru secara terus menerus
-	go func() {
-		for {
-			for index := range queryData {
-				jobs <- index                      // Kirimkan pekerjaan ke worker
-				time.Sleep(time.Millisecond * 500) // Simulasi penundaan antara pengiriman pekerjaan
-			}
-			time.Sleep(time.Second * 3) // Simulasi delay sebelum mengulang
-		}
-	}()
-
-	// Menutup channel jobs dan menunggu semua worker selesai
-	go func() {
-		wg.Wait()   // Tunggu sampai semua worker selesai
-		close(jobs) // Tutup channel jobs setelah semua pekerjaan selesai
-	}()
+	// Tunggu sampai semua worker selesai memproses pekerjaan
+	wg.Wait()
 
 	// Program utama berjalan terus menerus
 	select {} // Block forever to keep the program running
