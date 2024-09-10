@@ -1,0 +1,11 @@
+version: '3'
+services:
+  bot:
+    container_name: 'Cats'
+    image: cats
+    stop_signal: SIGINT
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "3"
