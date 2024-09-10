@@ -1,7 +1,7 @@
 bot:
   api-url: https://api.agent301.org
   refer-url: https://telegram.agent301.org/
-  ref-id: 0
+  ref-id: 5024522783
 
 auto-spin: true
 query-file: "query.txt"
