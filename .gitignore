@@ -1,3 +1,2 @@
-raw/*
-query.txt
-.vscode
+./raw/*
+./query.txt
