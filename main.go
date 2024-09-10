@@ -23,7 +23,7 @@ func main() {
                                                                             |  $$$$$$/                                                          
                                                                              \______/                                                           
 `)
-	fmt.Println(`𝓹𝓸𝔀𝓮𝓻𝓮𝓭 𝓫𝔂 : 𝓱𝓸𝓵𝔂𝓬𝓪𝓷\n`)
+	fmt.Println(`ρσωєяє∂ ву : нσℓу¢αη`)
 
 	// add driver for support yaml content
 	config.AddDriver(yaml.Driver)
