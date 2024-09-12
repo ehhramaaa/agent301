@@ -4,7 +4,7 @@ services:
     container_name: 'Agent301'
     image: agent301
     stop_signal: SIGINT
-    restart: always
+    restart: on-failure
     deploy:
       resources:
         limits:

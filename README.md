@@ -11,7 +11,6 @@
 |      Feature      | Supported |
 | :---------------: | :-------: |
 |  Multithreading   |    ✅     |
-|   Auto Referral   |    ✅     |
 |  Auto Claim Task  |    ✅     |
 |  Auto Spin Wheel  |    ✅     |
 | Auto Daily Streak |    ✅     |

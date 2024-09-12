@@ -10,6 +10,7 @@ import (
 	"github.com/gookit/config/v2"
 
 	"agent301/helper"
+
 )
 
 func readQueryData(queryPath string) []string {
@@ -89,10 +90,10 @@ func ProcessBot(config *config.Config) {
 
 			helper.PrettyLog("info", fmt.Sprintf("%s | Launch Bot Finished, Sleeping for %v seconds..", username, randomSleep))
 
-			time.Sleep(time.Duration(randomSleep) * time.Second)
-
 			// Melepaskan token dari semaphore
 			<-semaphore
+
+			time.Sleep(time.Duration(randomSleep) * time.Second)
 		}(j, query)
 	}
 

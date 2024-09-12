@@ -1,5 +1,5 @@
 # Gunakan image Go berbasis Alpine
-FROM golang:latest AS builder
+FROM golang:alpine
 
 # Set working directory
 WORKDIR /app
@@ -14,19 +14,10 @@ RUN go mod download
 COPY . .
 
 # Build aplikasi
-RUN go build -o main .
+RUN go build -o main
 
-# Gunakan image Alpine sebagai base untuk runtime
-FROM alpine:latest
-
-# Install dependensi runtime (jika ada)
-RUN apk --no-cache add ca-certificates
-
-# Set working directory
-WORKDIR /root/
-
-# Salin binary dari stage builder
-COPY --from=builder /app/main .
+# Setting Permission
+RUN chmod +x main
 
 # Jalankan aplikasi
 CMD ["./main"]
