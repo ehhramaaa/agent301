@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
 )
 
 type Client struct {
@@ -81,6 +82,13 @@ func (c *Client) getWheel() ([]byte, error) {
 	payload := map[string]string{}
 
 	return c.makeRequest("POST", "/wheel/load", payload)
+}
+
+// Get Main Task
+func (c *Client) getMainTask() ([]byte, error){
+	payload := map[string]string{}
+
+	return c.makeRequest("POST", "/getTasks", payload)
 }
 
 // Completing Main Task
