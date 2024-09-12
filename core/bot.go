@@ -37,7 +37,32 @@ func getUserData(client *Client, refId string) map[string]interface{} {
 	}
 
 	return processResponse(res)
+}
 
+func completingMainTask(client *Client, username string, taskType string) {
+	req, err := client.mainTask(taskType)
+	if err != nil {
+		helper.PrettyLog("error", fmt.Sprintf("Failed to completing main task: %v", err))
+		return
+	}
+
+	res, err := handleResponse(req)
+	if err != nil {
+		fmt.Println("Error handling response:", err)
+		return
+	}
+
+	taskData := processResponse(res)
+
+	if taskData["is_completed"].(bool) {
+		helper.PrettyLog("success", fmt.Sprintf("%s | Completed Task : %s | Reward: %.0f | Current Balance: %.0f", username, taskType, taskData["reward"].(float64), taskData["balance"].(float64)))
+	} else {
+		helper.PrettyLog("error", fmt.Sprintf("%s | Failed Completed Task : %s | Try Again Letter...", username, taskType))
+	}
+
+	helper.PrettyLog("info", fmt.Sprintf("%s | Sleep 5s Before Completing Another Main Task...", username))
+
+	time.Sleep(5 * time.Second)
 }
 
 func launchBot(username string, query string, apiUrl string, referUrl string, refId string, isSpinWheel bool) {
@@ -101,28 +126,14 @@ func launchBot(username string, query string, apiUrl string, referUrl string, re
 			}
 
 			if !taskMap["is_claimed"].(bool) {
-				req, err = client.mainTask(taskMap["type"].(string))
-				if err != nil {
-					helper.PrettyLog("error", fmt.Sprintf("Failed to completing main task: %v", err))
-					return
-				}
-
-				res, err = handleResponse(req)
-				if err != nil {
-					fmt.Println("Error handling response:", err)
-					return
-				}
-
-				taskData := processResponse(res)
-
-				if taskData["is_completed"].(bool) {
-					helper.PrettyLog("success", fmt.Sprintf("%s | Completed Task : %s | Reward: %.0f | Current Balance: %.0f", username, taskMap["type"].(string), taskData["reward"].(float64), taskData["balance"].(float64)))
+				if taskMap["type"].(string) == "video" {
+					for int(taskMap["count"].(float64)) <= int(taskMap["max_count"].(float64)) {
+						completingMainTask(client, username, taskMap["type"].(string))
+					}
+				} else {
+					completingMainTask(client, username, taskMap["type"].(string))
 				}
 			}
-
-			helper.PrettyLog("info", fmt.Sprintf("%s | Sleep 5s Before Completing Another Main Task...", username))
-
-			time.Sleep(5 * time.Second)
 		}
 	} else {
 		fmt.Println("No tasks found")
