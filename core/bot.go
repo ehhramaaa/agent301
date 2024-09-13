@@ -60,9 +60,15 @@ func completingMainTask(client *Client, username string, taskType string) {
 		helper.PrettyLog("error", fmt.Sprintf("%s | Failed Completed Task : %s | Try Again Letter...", username, taskType))
 	}
 
-	helper.PrettyLog("info", fmt.Sprintf("%s | Sleep 5s Before Completing Another Main Task...", username))
+	if taskType == "video" {
+		helper.PrettyLog("info", fmt.Sprintf("%s | Sleep 30s Before Completing Another Video Task...", username))
 
-	time.Sleep(5 * time.Second)
+		time.Sleep(30 * time.Second)
+	} else {
+		helper.PrettyLog("info", fmt.Sprintf("%s | Sleep 5s Before Completing Another Main Task...", username))
+
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func launchBot(username string, query string, apiUrl string, referUrl string, refId string, isSpinWheel bool) {
@@ -127,8 +133,14 @@ func launchBot(username string, query string, apiUrl string, referUrl string, re
 
 			if !taskMap["is_claimed"].(bool) {
 				if taskMap["type"].(string) == "video" {
+					limit := 0
 					for int(taskMap["count"].(float64)) <= int(taskMap["max_count"].(float64)) {
+						if limit == 40 {
+							helper.PrettyLog("error", fmt.Sprintf("%s | Completing Video Task Limit Reached...", username))
+							break
+						}
 						completingMainTask(client, username, taskMap["type"].(string))
+						limit++
 					}
 				} else {
 					completingMainTask(client, username, taskMap["type"].(string))
@@ -170,7 +182,7 @@ func launchBot(username string, query string, apiUrl string, referUrl string, re
 					if key == "timestamp" && (float64(time.Now().Unix()) >= value.(float64)) {
 						var taskData map[string]interface{}
 
-						for i := 1; i <= 5; i++ {
+						for i := 1; i <= 7; i++ {
 							req, err = client.videoTask()
 							if err != nil {
 								helper.PrettyLog("error", fmt.Sprintf("Failed to completing video task: %v", err))
@@ -184,9 +196,9 @@ func launchBot(username string, query string, apiUrl string, referUrl string, re
 
 							taskData = processResponse(res)
 
-							helper.PrettyLog("success", fmt.Sprintf("%s | Completed Video Task | Sleep 15 Second...", username))
+							helper.PrettyLog("success", fmt.Sprintf("%s | Completed Video Task | Sleep 30 Second...", username))
 
-							time.Sleep(15 * time.Second)
+							time.Sleep(30 * time.Second)
 						}
 
 						helper.PrettyLog("success", fmt.Sprintf("%s | Video Task Limit | Current Ticket: %.0f", username, taskData["tickets"].(float64)))
