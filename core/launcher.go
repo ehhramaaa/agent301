@@ -80,6 +80,7 @@ func ProcessBot(config *config.Config) {
 			return
 		}
 	} else {
+		// TODO
 		choice = helper.InputTerminal("Select Choice: ")
 	}
 
@@ -93,6 +94,7 @@ func ProcessBot(config *config.Config) {
 	var wg sync.WaitGroup
 
 	// Membuat semaphore dengan buffered channel
+	// TODO Deadlock
 	semaphore := make(chan struct{}, maxThread)
 
 	for j, query := range queryData {
