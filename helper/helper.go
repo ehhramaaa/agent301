@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 )
 
 func ReadFileTxt(filePath string) []string {
@@ -29,6 +30,33 @@ func ReadFileTxt(filePath string) []string {
 	return value
 }
 
+func SaveFileTxt(filePath string, data string) error {
+	// Cek apakah file sudah ada
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		// Jika file tidak ada, tulis data baru
+		err = os.WriteFile(filePath, []byte(data+"\n"), 0644)
+	} else {
+		// Jika file sudah ada, tambahkan data ke akhir file
+		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		_, err = f.WriteString(data + "\n")
+		if err != nil {
+			return err
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CheckFileOrFolder(filePath string) bool {
 	_, err := os.Stat(filePath)
 	return !os.IsNotExist(err)
@@ -46,4 +74,14 @@ func FindKeyByValue(m map[string]interface{}, value interface{}) []string {
 		}
 	}
 	return key
+}
+
+func InputTerminal(prompt string) string {
+	PrettyLog("input", prompt)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	value, _ := reader.ReadString('\n')
+
+	return strings.TrimSpace(value)
 }

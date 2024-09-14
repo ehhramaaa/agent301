@@ -1,5 +1,6 @@
-## Update: Get And Completing Main Tasks
- [![Static Badge](https://img.shields.io/badge/Telegram-Bot%20Link-Link?style=for-the-badge&logo=Telegram&logoColor=white&logoSize=auto&color=blue)](https://t.me/Agent301Bot/app?startapp=onetime5024522783)
+## Update: Scan Qr Farming Available
+
+[![Static Badge](https://img.shields.io/badge/Telegram-Bot%20Link-Link?style=for-the-badge&logo=Telegram&logoColor=white&logoSize=auto&color=blue)](https://t.me/Agent301Bot/app?startapp=onetime5024522783)
 
 ![demo](https://raw.githubusercontent.com/ehhramaaa/agent301/main/assets/Sunny_20240910_190645.png)
 
@@ -15,19 +16,20 @@
 |  Auto Claim Task  |    ✅     |
 |  Auto Spin Wheel  |    ✅     |
 | Auto Daily Streak |    ✅     |
+|  Scan QR Farming  |    ✅     |
 |  Use Query Data   |    ✅     |
 
 ## [Settings](https://github.com/ehhramaaa/agent301/blob/main/config.yml)
 
-|          Settings           |                                 Description                                  |
-| :-------------------------: | :--------------------------------------------------------------------------: |
-|    **API-URL**    |   BASE API URL   |
-|         **REFER-URL**          |             BASE BOT URL              |
-|         **REF-ID**          |             (Your telegram ID)              |
-| **AUTO-SPIN** |            Auto Spin Wheel If Have Ticket             |
-|   **QUERY-FILE**   |                    Your Query File Name (.txt)                    |
-|     **MAX-THREAD**     |              Max Thread Worker Run Parallel                |
-|       **RANDOM-SLEEP**        |                Delay before the next lap (e.g. [1800, 3600])                 |
+|     Settings     |                  Description                  |
+| :--------------: | :-------------------------------------------: |
+|   **API-URL**    |                 BASE API URL                  |
+|  **REFER-URL**   |                 BASE BOT URL                  |
+|    **REF-ID**    |              (Your telegram ID)               |
+|  **AUTO-SPIN**   |        Auto Spin Wheel If Have Ticket         |
+|  **QUERY-FILE**  |          Your Query File Name (.txt)          |
+|  **MAX-THREAD**  |        Max Thread Worker Run Parallel         |
+| **RANDOM-SLEEP** | Delay before the next lap (e.g. [1800, 3600]) |
 
 ## Prerequisites 📚
 
@@ -58,3 +60,24 @@ Linux:
 ```shell
 go build -o agent301
 ```
+
+## Usage
+```shell
+go run .
+```
+Or 
+```shell
+go run main.go
+```
+
+If You Want Auto Select Choice In Terminal
+
+For Option 1
+```shell
+go run . -c 1
+``` 
+
+For Option 2
+```shell
+go run . -c 2
+``` 

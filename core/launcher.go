@@ -1,16 +1,15 @@
 package core
 
 import (
+	"agent301/helper"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/url"
 	"sync"
 	"time"
 
 	"github.com/gookit/config/v2"
-
-	"agent301/helper"
-
 )
 
 func readQueryData(queryPath string) []string {
@@ -60,6 +59,33 @@ func ProcessBot(config *config.Config) {
 	}
 
 	helper.PrettyLog("info", fmt.Sprintf("%v Query Data Detected", len(queryData)))
+
+	helper.PrettyLog("1", "Qr Farming")
+	helper.PrettyLog("2", "Auto Completing Task And Auto Spin Wheel (Unlimited Loop)")
+
+	cFlag := flag.String("c", "", "Choice of action (1 or 2)")
+
+	flag.Parse()
+
+	var choice string
+
+	// Jika flag -c disediakan
+	if *cFlag != "" {
+		// Validasi apakah flag -c berada dalam rentang yang benar (1 atau 2)
+		if *cFlag == "1" || *cFlag == "2" {
+			choice = *cFlag
+		} else {
+			fmt.Println("Invalid flag value for -c. Only 1 or 2 are allowed.")
+			return
+		}
+	} else {
+		choice = helper.InputTerminal("Select Choice: ")
+		if choice != "1" || *cFlag != "2" {
+			fmt.Println("Invalid Choice. Only 1 or 2 are allowed.")
+			return
+		}
+	}
+
 	helper.PrettyLog("info", "Start Processing Account...")
 
 	time.Sleep(3 * time.Second)
@@ -82,24 +108,34 @@ func ProcessBot(config *config.Config) {
 			username := getUsernameFromQuery(query)
 			helper.PrettyLog("info", fmt.Sprintf("%s | Started Bot...", username))
 
-			// Jalankan bot
-			launchBot(username, query, apiUrl, referUrl, refId, isSpinWheel)
-
-			// Sleep setelah job selesai
-			randomSleep := helper.RandomNumber(config.Int("random-sleep.min"), config.Int("random-sleep.max"))
-
-			helper.PrettyLog("info", fmt.Sprintf("%s | Launch Bot Finished, Sleeping for %v seconds..", username, randomSleep))
+			switch choice {
+			case "1":
+				isQrFarming := true
+				launchBot(username, queryData, query, apiUrl, referUrl, refId, isSpinWheel, isQrFarming)
+			case "2":
+				isQrFarming := false
+				launchBot(username, queryData, query, apiUrl, referUrl, refId, isSpinWheel, isQrFarming)
+			}
 
 			// Melepaskan token dari semaphore
 			<-semaphore
 
-			time.Sleep(time.Duration(randomSleep) * time.Second)
+			if choice == "2" {
+				// Sleep setelah job selesai
+				randomSleep := helper.RandomNumber(config.Int("random-sleep.min"), config.Int("random-sleep.max"))
+
+				helper.PrettyLog("info", fmt.Sprintf("%s | Launch Bot Finished, Sleeping for %v seconds..", username, randomSleep))
+
+				time.Sleep(time.Duration(randomSleep) * time.Second)
+			}
 		}(j, query)
 	}
 
 	// Tunggu sampai semua worker selesai memproses pekerjaan
 	wg.Wait()
 
-	// Program utama berjalan terus menerus
-	select {} // Block forever to keep the program running
+	if choice == "2" {
+		// Program utama berjalan terus menerus
+		select {} // Block forever to keep the program running
+	}
 }

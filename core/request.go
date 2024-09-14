@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
 )
 
 type Client struct {
@@ -85,7 +84,7 @@ func (c *Client) getWheel() ([]byte, error) {
 }
 
 // Get Main Task
-func (c *Client) getMainTask() ([]byte, error){
+func (c *Client) getMainTask() ([]byte, error) {
 	payload := map[string]string{}
 
 	return c.makeRequest("POST", "/getTasks", payload)
@@ -132,4 +131,13 @@ func (c *Client) spinWheel() ([]byte, error) {
 	payload := map[string]string{}
 
 	return c.makeRequest("POST", "/wheel/spin", payload)
+}
+
+// Qr Farming
+func (c *Client) qrFarming(token string) ([]byte, error) {
+	payload := map[string]string{
+		"token": token,
+	}
+
+	return c.makeRequest("POST", "/passQrToken", payload)
 }
