@@ -60,10 +60,11 @@ func ProcessBot(config *config.Config) {
 
 	helper.PrettyLog("info", fmt.Sprintf("%v Query Data Detected", len(queryData)))
 
-	helper.PrettyLog("1", "Qr Farming")
-	helper.PrettyLog("2", "Auto Completing Task And Auto Spin Wheel (Unlimited Loop)")
+	helper.PrettyLog("1", "Generate Qr Token")
+	helper.PrettyLog("2", "Qr Farming")
+	helper.PrettyLog("3", "Auto Completing Task And Auto Spin Wheel (Unlimited Loop)")
 
-	cFlag := flag.String("c", "", "Choice of action (1 or 2)")
+	cFlag := flag.String("c", "", "Choice of action (1, 2 or 3)")
 
 	flag.Parse()
 
@@ -72,23 +73,22 @@ func ProcessBot(config *config.Config) {
 	// Jika flag -c disediakan
 	if *cFlag != "" {
 		// Validasi apakah flag -c berada dalam rentang yang benar (1 atau 2)
-		if *cFlag == "1" || *cFlag == "2" {
+		if *cFlag == "1" || *cFlag == "2" || *cFlag == "3" {
 			choice = *cFlag
 		} else {
-			fmt.Println("Invalid flag value for -c. Only 1 or 2 are allowed.")
+			fmt.Println("Invalid flag value for -c. Only 1 or 3 are allowed.")
 			return
 		}
 	} else {
 		choice = helper.InputTerminal("Select Choice: ")
-		if choice != "1" || *cFlag != "2" {
-			fmt.Println("Invalid Choice. Only 1 or 2 are allowed.")
-			return
-		}
 	}
 
 	helper.PrettyLog("info", "Start Processing Account...")
 
 	time.Sleep(3 * time.Second)
+
+	var isGenerateToken bool
+	var isQrFarming bool
 
 	var wg sync.WaitGroup
 
@@ -110,17 +110,22 @@ func ProcessBot(config *config.Config) {
 
 			switch choice {
 			case "1":
-				isQrFarming := true
-				launchBot(username, queryData, query, apiUrl, referUrl, refId, isSpinWheel, isQrFarming)
+				isQrFarming = false
+				isGenerateToken = true
+
+				launchBot(username, queryData, query, apiUrl, referUrl, refId, isSpinWheel, isQrFarming, isGenerateToken)
 			case "2":
-				isQrFarming := false
-				launchBot(username, queryData, query, apiUrl, referUrl, refId, isSpinWheel, isQrFarming)
+				isQrFarming = true
+
+				launchBot(username, queryData, query, apiUrl, referUrl, refId, isSpinWheel, isQrFarming, isGenerateToken)
+			case "3":
+				launchBot(username, queryData, query, apiUrl, referUrl, refId, isSpinWheel, isQrFarming, isGenerateToken)
 			}
 
 			// Melepaskan token dari semaphore
 			<-semaphore
 
-			if choice == "2" {
+			if choice == "3" {
 				// Sleep setelah job selesai
 				randomSleep := helper.RandomNumber(config.Int("random-sleep.min"), config.Int("random-sleep.max"))
 

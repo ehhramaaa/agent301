@@ -41,7 +41,7 @@ func getUserData(client *Client, refId string) map[string]interface{} {
 	return processResponse(res)
 }
 
-func generateQrToken(token string, queryData []string) {
+func generateQrToken(token string, queryData []string, username string) {
 	// Check Is Qr Token Exits
 	for _, existingToken := range qrToken {
 		if existingToken == token {
@@ -50,6 +50,8 @@ func generateQrToken(token string, queryData []string) {
 	}
 
 	qrToken = append(qrToken, token)
+
+	helper.PrettyLog("success", fmt.Sprintf("%s | Generating Token Success | Wait Until All Token Generated...", username))
 
 	// Save QrToken To Txt
 	if qrToken != nil && len(qrToken) == len(queryData) {
@@ -98,7 +100,7 @@ func completingMainTask(client *Client, username string, taskType string) {
 	}
 }
 
-func launchBot(username string, queryData []string, query string, apiUrl string, referUrl string, refId string, isSpinWheel bool, isQrFarming bool) {
+func launchBot(username string, queryData []string, query string, apiUrl string, referUrl string, refId string, isSpinWheel bool, isQrFarming bool, isGenerateToken bool) {
 	client := &Client{
 		apiURL:     apiUrl,
 		referURL:   referUrl,
@@ -113,34 +115,44 @@ func launchBot(username string, queryData []string, query string, apiUrl string,
 		return
 	}
 
+	if isGenerateToken {
+		generateQrToken(userData["qr_token"].(string), queryData, username)
+		return
+	}
+
 	if isQrFarming {
-		generateQrToken(userData["qr_token"].(string), queryData)
-
-		tokens := helper.ReadFileTxt("./qr-token.txt")
-		if tokens == nil {
-			helper.PrettyLog("error", "Qr Token data not found")
-			return
-		}
-
-		for _, token := range tokens {
-			if token != userData["qr_token"].(string) {
-				req, err := client.qrFarming(token)
-				if err != nil {
-					helper.PrettyLog("error", fmt.Sprintf("%s | Failed to qr farming: %v", username, err))
-					continue
-				}
-				res, err := handleResponse(req)
-
-				qrFarming := processResponse(res)
-
-				if reward, exits := qrFarming["reward"].(float64); exits {
-					helper.PrettyLog("success", fmt.Sprintf("%s | Scan Qr Farming Successfully | Reward: %.0f | Sleep 15s Before Scan Another Qr...", username, reward))
-				} else {
-					helper.PrettyLog("error", fmt.Sprintf("%s | Scan Qr Farming Failed | Sleep 15s Before Scan Another Qr...", username))
-				}
-
-				time.Sleep(15 * time.Second)
+		if helper.CheckFileOrFolder("./qr-token.txt") {
+			tokens := helper.ReadFileTxt("./qr-token.txt")
+			if tokens == nil {
+				helper.PrettyLog("error", "Qr Token data not found")
+				return
 			}
+
+			for _, token := range tokens {
+				if token != userData["qr_token"].(string) {
+					req, err := client.qrFarming(token)
+					if err != nil {
+						helper.PrettyLog("error", fmt.Sprintf("%s | Failed to qr farming: %v", username, err))
+						continue
+					}
+
+					res, err := handleResponse(req)
+
+					qrFarming := processResponse(res)
+
+					if reward, exits := qrFarming["reward"].(float64); exits {
+						helper.PrettyLog("success", fmt.Sprintf("%s | Scan Qr Farming Successfully | Reward: %.0f | Sleep 15s Before Scan Another Qr...", username, reward))
+						time.Sleep(15 * time.Second)
+					} else {
+						helper.PrettyLog("error", fmt.Sprintf("%s | Scan Qr Farming Failed | Sleep 15s Before Scan Another Qr...", username))
+						time.Sleep(15 * time.Second)
+					}
+
+				}
+				helper.PrettyLog("success", fmt.Sprintf("%s | Scan Qr All Account Successfully...", username))
+			}
+		} else {
+			helper.PrettyLog("error", fmt.Sprintf("%s | File qr-token.txt Not Found | Please Generate First...", username))
 		}
 
 		return
