@@ -401,6 +401,13 @@ func (c *Client) processMainTools() {
 }
 
 func (c *Client) processGetQrToken() {
+	filePath := fmt.Sprintf("%s/qr_token_%s.txt", outputPath, c.account.Username)
+
+	if helper.CheckFileOrFolder(filePath) {
+		helper.PrettyLog("success", fmt.Sprintf("| %s | QrToken Found %s...", c.account.Username, filePath))
+		return
+	}
+
 	userData := c.getMe()
 	if userData == nil {
 		return
@@ -411,13 +418,6 @@ func (c *Client) processGetQrToken() {
 	}
 
 	token := userData["qr_token"].(string)
-
-	filePath := fmt.Sprintf("%s/qr_token_%s.txt", outputPath, c.account.Username)
-
-	// Save QrToken To Txt
-	if helper.CheckFileOrFolder(filePath) {
-		os.Remove(filePath)
-	}
 
 	time.Sleep(1 * time.Second)
 
