@@ -1,5 +1,8 @@
 # Mengabaikan file log
-*.txt
+output/
+proxy.txt
+qr_token.txt
+query.txt
 
 # Mengabaikan folder build
 raw/
