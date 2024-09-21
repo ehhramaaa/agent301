@@ -244,6 +244,7 @@ func (c *Client) processMainTools() {
 					for count < maxCount {
 						result := c.mainTask(taskMap["type"].(string))
 						if result == nil {
+							count++
 							continue
 						}
 
