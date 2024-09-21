@@ -329,6 +329,7 @@ func (c *Client) processMainTools() {
 						for count <= 5 {
 							result := c.wheelTask("hour")
 							if result == nil {
+								count++
 								continue
 							}
 
@@ -337,6 +338,8 @@ func (c *Client) processMainTools() {
 							}
 
 							helper.PrettyLog("success", fmt.Sprintf("%s | Completed Video Task | Sleep 30 Second...", c.account.Username))
+
+							count++
 
 							time.Sleep(30 * time.Second)
 						}
