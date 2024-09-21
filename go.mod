@@ -14,6 +14,7 @@ require (
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mileusna/useragent v1.3.5 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/sync v0.5.0 // indirect

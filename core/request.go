@@ -1,6 +1,7 @@
 package core
 
 import (
+	"agent301/helper"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -8,26 +9,8 @@ import (
 	"net/http"
 )
 
-type Client struct {
-	apiURL     string
-	referURL   string
-	authToken  string
-	httpClient *http.Client
-}
-
-func handleResponse(respBody []byte) (map[string]interface{}, error) {
-	// Mengurai JSON ke dalam map[string]interface{}
-	var result map[string]interface{}
-	err := json.Unmarshal(respBody, &result)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse JSON response: %v", err)
-	}
-
-	return result, nil
-}
-
 func (c *Client) makeRequest(method string, endpoint string, jsonBody interface{}) ([]byte, error) {
-	fullURL := c.apiURL + endpoint
+	fullURL := "https://api.agent301.org" + endpoint
 
 	// Convert body to JSON
 	var reqBody []byte
@@ -46,7 +29,7 @@ func (c *Client) makeRequest(method string, endpoint string, jsonBody interface{
 	}
 
 	// Set header
-	setHeader(req, c.referURL, c.authToken)
+	setHeader(req, c.authToken)
 
 	// Send request
 	resp, err := c.httpClient.Do(req)
@@ -69,75 +52,141 @@ func (c *Client) makeRequest(method string, endpoint string, jsonBody interface{
 }
 
 // Get Account Detail
-func (c *Client) getMe(refId string) ([]byte, error) {
+func (c *Client) getMe() map[string]interface{} {
 	payload := map[string]string{
 		"referrer_id": refId,
 	}
 
-	return c.makeRequest("POST", "/getMe", payload)
+	res, err := c.makeRequest("POST", "/getMe", payload)
+	if err != nil {
+		helper.PrettyLog("error", fmt.Sprintf("| %s | Failed to get me: %v", c.account.Username, err))
+		return nil
+	}
+
+	result, err := handleResponseMap(res)
+	if err != nil {
+		fmt.Println("Error handling response:", err)
+		return nil
+	}
+
+	return result
 }
 
-func (c *Client) getWheel() ([]byte, error) {
+func (c *Client) getWheel() map[string]interface{} {
 	payload := map[string]string{}
 
-	return c.makeRequest("POST", "/wheel/load", payload)
+	res, err := c.makeRequest("POST", "/wheel/load", payload)
+	if err != nil {
+		helper.PrettyLog("error", fmt.Sprintf("| %s | Failed to get wheel: %v", c.account.Username, err))
+		return nil
+	}
+
+	result, err := handleResponseMap(res)
+	if err != nil {
+		fmt.Println("Error handling response:", err)
+		return nil
+	}
+
+	return result
 }
 
 // Get Main Task
-func (c *Client) getMainTask() ([]byte, error) {
+func (c *Client) getMainTask() map[string]interface{} {
 	payload := map[string]string{}
 
-	return c.makeRequest("POST", "/getTasks", payload)
+	res, err := c.makeRequest("POST", "/getTasks", payload)
+	if err != nil {
+		helper.PrettyLog("error", fmt.Sprintf("| %s | Failed to get main task: %v", c.account.Username, err))
+		return nil
+	}
+
+	result, err := handleResponseMap(res)
+	if err != nil {
+		fmt.Println("Error handling response:", err)
+		return nil
+	}
+
+	return result
 }
 
 // Completing Main Task
-func (c *Client) mainTask(taskType string) ([]byte, error) {
+func (c *Client) mainTask(taskType string) map[string]interface{} {
 	payload := map[string]string{
 		"type": taskType,
 	}
 
-	return c.makeRequest("POST", "/completeTask", payload)
+	res, err := c.makeRequest("POST", "/completeTask", payload)
+	if err != nil {
+		helper.PrettyLog("error", fmt.Sprintf("| %s | Failed to completing main task: %v", c.account.Username, err))
+		return nil
+	}
+
+	result, err := handleResponseMap(res)
+	if err != nil {
+		fmt.Println("Error handling response:", err)
+		return nil
+	}
+
+	return result
 }
 
 // Completing Wheel Task
-func (c *Client) wheelTask(taskType string) ([]byte, error) {
+func (c *Client) wheelTask(taskType string) map[string]interface{} {
 	payload := map[string]string{
 		"type": taskType,
 	}
 
-	return c.makeRequest("POST", "/wheel/task", payload)
-}
-
-// Completing Video Task
-func (c *Client) videoTask() ([]byte, error) {
-	payload := map[string]string{
-		"type": "hour",
+	res, err := c.makeRequest("POST", "/wheel/task", payload)
+	if err != nil {
+		helper.PrettyLog("error", fmt.Sprintf("| %s | Failed to completing wheel task: %v", c.account.Username, err))
+		return nil
 	}
 
-	return c.makeRequest("POST", "/wheel/task", payload)
-}
-
-// Completing Daily Task
-func (c *Client) dailyTask() ([]byte, error) {
-	payload := map[string]string{
-		"type": "daily",
+	result, err := handleResponseMap(res)
+	if err != nil {
+		fmt.Println("Error handling response:", err)
+		return nil
 	}
 
-	return c.makeRequest("POST", "/wheel/task", payload)
+	return result
 }
 
 // Spin Wheel
-func (c *Client) spinWheel() ([]byte, error) {
+func (c *Client) spinWheel() map[string]interface{} {
 	payload := map[string]string{}
 
-	return c.makeRequest("POST", "/wheel/spin", payload)
+	res, err := c.makeRequest("POST", "/wheel/spin", payload)
+	if err != nil {
+		helper.PrettyLog("error", fmt.Sprintf("| %s | Failed to spin wheel: %v", c.account.Username, err))
+		return nil
+	}
+
+	result, err := handleResponseMap(res)
+	if err != nil {
+		fmt.Println("Error handling response:", err)
+		return nil
+	}
+
+	return result
 }
 
 // Qr Farming
-func (c *Client) qrFarming(token string) ([]byte, error) {
+func (c *Client) qrFarming(qrToken string) map[string]interface{} {
 	payload := map[string]string{
-		"token": token,
+		"token": qrToken,
 	}
 
-	return c.makeRequest("POST", "/passQrToken", payload)
+	res, err := c.makeRequest("POST", "/passQrToken", payload)
+	if err != nil {
+		helper.PrettyLog("error", fmt.Sprintf("| %s | Failed to scan qr: %v", c.account.Username, err))
+		return nil
+	}
+
+	result, err := handleResponseMap(res)
+	if err != nil {
+		fmt.Println("Error handling response:", err)
+		return nil
+	}
+
+	return result
 }

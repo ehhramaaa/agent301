@@ -6,41 +6,28 @@ import (
 	"net/http"
 )
 
-func generateChromeVersion() int {
-	var chromeVersion []int
-
-	for i := 110; i <= 127; i++ {
-		chromeVersion = append(chromeVersion, i)
+func setHeader(http *http.Request, authToken string) {
+	userAgent, os := generateRandomUserAgent()
+	if userAgent == "" || os == "" {
+		helper.PrettyLog("error", "Failed Generate Random User Agent")
+		return
 	}
-
-	return chromeVersion[helper.RandomNumber(0, len(chromeVersion))]
-}
-
-func setHeader(http *http.Request, referUrl string, authToken string) {
-	device := []string{
-		"ios",
-		"android",
-	}
-
-	browserVersion := generateChromeVersion()
 
 	header := map[string]string{
 		"accept":             "application/json, text/plain, */*",
 		"accept-language":    "en-US,en;q=0.9,id;q=0.8",
 		"content-type":       "application/json",
 		"priority":           "u=1, i",
-		"sec-ch-ua":          fmt.Sprintf("\"Chromium\";v=\"%v\", \"Not;A=Brand\";v=\"24\", \"Google Chrome\";v=\"%v\"", browserVersion, browserVersion),
-		"sec-ch-ua-mobile":   "?0",
-		"sec-ch-ua-platform": fmt.Sprintf("\"%v\"", device[helper.RandomNumber(0, (len(device)-1))]),
+		"sec-ch-ua":          `"Android WebView";v="125", "Chromium";v="125", "Not.A/Brand";v="24"`,
+		"sec-ch-ua-platform": fmt.Sprintf("\"%s\"", os),
+		"authorization":      authToken,
 		"sec-fetch-dest":     "empty",
 		"sec-fetch-mode":     "cors",
 		"sec-fetch-site":     "same-site",
-		"Referer":            referUrl,
+		"Referrer":           "https://telegram.agent301.org/",
 		"Referrer-Policy":    "strict-origin-when-cross-origin",
-	}
-
-	if authToken != "" {
-		header["authorization"] = authToken
+		"X-Requested-With":   "org.telegram.messenger.web",
+		"User-Agent":         userAgent,
 	}
 
 	for key, value := range header {
