@@ -98,6 +98,8 @@ func processSelectedTools(queryData []string) {
 		fmt.Println("<=====================[Get Qr Token]=====================>")
 	case 3:
 		fmt.Println("<=====================[Merge Qr Token]=====================>")
+		processMergeQrToken()
+		return
 	case 4:
 		fmt.Println("<=====================[Qr Farming]=====================>")
 	case 5:
@@ -184,8 +186,6 @@ func (c *Client) selectProcess() {
 		c.processMainTools()
 	case 2:
 		c.processGetQrToken()
-	case 3:
-		processMergeQrToken()
 	case 4:
 		c.processQrFarming()
 	}
@@ -379,11 +379,12 @@ func (c *Client) processMainTools() {
 			userData = data
 		}
 
-		isLimit := false
+		var limit int
 
-		for !isLimit && (int(userData["tickets"].(float64)) > 0) {
+		for limit < int(userData["tickets"].(float64)) {
 			result := c.spinWheel()
 			if result == nil {
+				limit++
 				continue
 			}
 
@@ -394,6 +395,8 @@ func (c *Client) processMainTools() {
 			helper.PrettyLog("success", fmt.Sprintf("%s | Spinning Wheel | Reward: %s | Balance: %.0f | Toncoin: %.0f | Notcoin: %.0f | Ticket: %.0f", c.account.Username, result["reward"].(string), result["balance"].(float64), result["toncoin"].(float64), result["notcoin"].(float64), result["tickets"].(float64)))
 
 			helper.PrettyLog("info", fmt.Sprintf("%s | Sleep 15 Second Before Spinning Wheel Again...", c.account.Username))
+
+			limit++
 
 			time.Sleep(15 * time.Second)
 		}
@@ -433,8 +436,16 @@ func (c *Client) processGetQrToken() {
 }
 
 func (c *Client) processQrFarming() {
+	tokens := helper.ReadFileTxt(qrTokenPath)
+	if tokens == nil {
+		helper.PrettyLog("error", "Qr Token data not found, Please Insert Your Qr Token In qr_token.txt")
+		return
+	}
+
 	userData := c.getMe()
 	if userData == nil {
+		helper.PrettyLog("error", fmt.Sprintf("%s | Scan Qr Farming Failed | Sleep 5s Before Scan Another Qr...", c.account.Username))
+		time.Sleep(5 * time.Second)
 		return
 	}
 
@@ -442,16 +453,12 @@ func (c *Client) processQrFarming() {
 		userData = data
 	}
 
-	tokens := helper.ReadFileTxt(qrTokenPath)
-	if tokens == nil {
-		helper.PrettyLog("error", "Qr Token data not found, Please Insert Your Qr Token In qr_token.txt")
-		return
-	}
-
 	for _, token := range tokens {
 		if token != userData["qr_token"].(string) {
 			result := c.qrFarming(token)
 			if result == nil {
+				helper.PrettyLog("error", fmt.Sprintf("%s | Scan Qr Farming Failed | Sleep 5s Before Scan Another Qr...", c.account.Username))
+				time.Sleep(5 * time.Second)
 				continue
 			}
 
